@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 
-# অ্যাপের কনফিগারেশন
+# অ্যাপের সেটআপ
 st.set_page_config(page_title="ব্লাড ডোনেট নেটওয়ার্ক", page_icon="🩸")
 st.title("🩸 ব্লাড ডোনেট নেটওয়ার্ক")
 st.subheader("রক্ত দিন, জীবন বাঁচান")
@@ -11,42 +11,46 @@ st.subheader("রক্ত দিন, জীবন বাঁচান")
 conn = st.connection("gsheets", type=GSheetsConnection)
 url = "https://docs.google.com/spreadsheets/d/1X6O8HFWva-bCEgCGRUG8GmjTGUYzZdfjJoFwuqzm9YA/edit?usp=sharing"
 
-# ডাটা পড়ার ফাংশন (Indentation ঠিক করা হয়েছে)
+# ডাটা পড়ার ফাংশন
 def get_data():
     try:
-        # গুগল ফর্মের ডাটা সাধারণত "Form Responses 1" ট্যাবে জমা হয়
-        return conn.read(spreadsheet=url, worksheet="Form Responses 1", usecols=[0,1,2,3,4])
-    except:
-        # যদি কোনো কারণে এরর হয়, তবে অন্তত খালি ডাটাফ্রেম দেখাবে
-        return pd.DataFrame(columns=["Timestamp", "Name", "Blood Group", "Phone", "Location"])
+        # worksheet="Form Responses 1" দেওয়া হয়েছে কারণ গুগল ফর্মের ডাটা এখানেই জমা হয়
+        df = conn.read(spreadsheet=url, worksheet="Form Responses 1")
+        return df
+    except Exception as e:
+        # যদি কোনো কারণে ফর্মের ট্যাব না পায়, তবে সাধারণ শিট চেক করবে
+        try:
+            return conn.read(spreadsheet=url)
+        except:
+            return pd.DataFrame()
 
-# সাইডবারে রেজিস্ট্রেশন ফর্মের লিঙ্ক
+# সাইডবারে তোমার ফর্মের লিঙ্ক
 st.sidebar.header("ডোনার হতে চান?")
 st.sidebar.info("নতুন নাম যোগ করতে চাইলে নিচের বাটনে ক্লিক করে ফরমটি পূরণ করুন।")
 st.sidebar.link_button("👉 রেজিস্ট্রেশন ফরম পূরণ করুন", "https://forms.gle/2ZFWEFxrFt58fjRy5")
 
 st.sidebar.markdown("---")
-st.sidebar.write("গুগল ফর্মে তথ্য দেওয়ার ১-২ মিনিট পর অ্যাপটি রিফ্রেশ করলে আপনার নাম তালিকায় দেখা যাবে।")
+st.sidebar.write("ডেভেলপার: হরশংকর রায়")
 
-# রক্তের সন্ধান করার সেকশন
+# সার্চ সেকশন
 st.header("🔍 রক্তের সন্ধান করুন")
 search_bg = st.selectbox("কোন গ্রুপের রক্ত খুঁজছেন?", ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
 
 if st.button("সার্চ করুন"):
     df = get_data()
+    
     if not df.empty:
-        # ব্লাড গ্রুপ দিয়ে ফিল্টার করা (গুগল ফর্মে সাধারণত ৩ নম্বর কলামে ব্লাড গ্রুপ থাকে)
-        # এখানে iloc[:, 2] ব্যবহার করা হয়েছে কারণ প্রথম কলামটি Timestamp
-        results = df[df.iloc[:, 2].astype(str).str.strip() == search_bg]
+        # কলামের নাম যাই হোক না কেন, এটি রক্ত গ্রুপ খুঁজে বের করবে
+        # সাধারণত ২য় বা ৩য় কলামে ব্লাড গ্রুপ থাকে, তাই আমরা সব কলামে খুঁজব
+        mask = df.apply(lambda row: row.astype(str).str.contains(search_bg, case=False).any(), axis=1)
+        results = df[mask]
         
         if not results.empty:
             st.success(f"অভিনন্দন! {search_bg} গ্রুপের ডোনার পাওয়া গেছে:")
-            st.table(results)
+            st.dataframe(results) # টেবিল আকারে ডাটা দেখাবে
         else:
             st.warning(f"দুঃখিত, বর্তমানে {search_bg} গ্রুপের কোনো ডোনার আমাদের তালিকায় নেই।")
     else:
-        st.error("ডাটাবেসে কোনো তথ্য পাওয়া যায়নি।")
+        st.error("ডাটাবেসে কোনো তথ্য পাওয়া যায়নি। অনুগ্রহ করে শিটটি চেক করুন।")
 
-# ফুটার
 st.markdown("---")
-st.markdown("### 👨‍💻 ডেভেলপার: হরশংকর রায়")

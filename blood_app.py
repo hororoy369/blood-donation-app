@@ -55,4 +55,4 @@ if st.button("সার্চ করুন"):
 
 st.markdown("---")
 st.markdown("---")
-st.markdown("### HP ROY ডেভেলপার: হরশংকর রায়")
+st.markdown("### -HP ROY- ডেভেলপার: হরশংকর রায় , প্লাবন রায়, চন্দন রায়")

@@ -1,4 +1,3 @@
-
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
@@ -27,21 +26,27 @@ with st.sidebar.form(key="registration_form"):
 
 if submit_button:
     if name and phone and location:
-        # নতুন ডাটা তৈরি
         new_data = pd.DataFrame([{"Name": name, "Blood Group": blood_group, "Phone": phone, "Location": location}])
-        # বর্তমান ডাটা আনা
         existing_data = get_data()
-        # নতুন ডাটা যুক্ত করা
         updated_df = pd.concat([existing_data, new_data], ignore_index=True)
-        # গুগল শিটে আপডেট করা
         conn.update(spreadsheet=url, data=updated_df)
-        st.sidebar.success(f"ধন্যবাদ {name}, আপনার তথ্য ডাটাবেসে সেভ হয়েছে!")
-        st.cache_data.clear() # ক্যাশ ক্লিয়ার করা যাতে নতুন ডাটা দেখা যায়
+        st.sidebar.success(f"ধন্যবাদ {name}, তথ্য সেভ হয়েছে!")
+        st.cache_data.clear()
     else:
-        st.sidebar.error("সবগুলো ঘর পূরণ করুন জানু!")
+        st.sidebar.error("সবগুলো ঘর পূরণ করুন")
 
 # সার্চ সেকশন
 st.header("রক্তের সন্ধান করুন")
 search_bg = st.selectbox("কোন গ্রুপের রক্ত খুঁজছেন?", ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], key='search_bg')
 
-if st.button("সার্চ
+if st.button("সার্চ করুন"):
+    df = get_data()
+    results = df[df['Blood Group'].astype(str).str.strip() == search_bg]
+    if not results.empty:
+        st.success(f"{search_bg} গ্রুপের ডোনার পাওয়া গেছে:")
+        st.table(results)
+    else:
+        st.info(f"দুঃখিত, বর্তমানে {search_bg} গ্রুপের কোনো ডোনার নেই।")
+
+st.markdown("---")
+st.markdown("### 👨‍💻 ডেভেলপার: হরশংকর রায়")

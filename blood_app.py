@@ -1,47 +1,47 @@
+
 import streamlit as st
+from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 
-# অ্যাপের টাইটেল ও লোগো
-st.set_page_config(page_title="ব্লাড ডোনেট নেটওয়ার্ক", page_icon="🩸")
-st.title("🩸 ব্লাড ডোনেট নেটওয়ার্ক")
+st.set_page_config(page_title="ব্লাড ডোনেট নেটওয়ার্ক", page_icon="🩸")
 
-# ডোনার রেজিস্ট্রেশন (Side Bar)
+st.title("🩸 ব্লাড ডোনেট নেটওয়ার্ক")
+st.markdown("### রক্ত দিন, জীবন বাঁচান")
+
+# গুগল শিটের সাথে কানেকশন তৈরি
+url = "https://docs.google.com/spreadsheets/d/1X6O8HFWva-bCEgCGRUG8GmjTGUYzZdfjJoFwuqzm9YA/edit?usp=sharing"
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+# ডাটা পড়ার ফাংশন
+def get_data():
+    return conn.read(spreadsheet=url, usecols=[0,1,2,3])
+
+# নতুন ডোনার রেজিস্ট্রেশন (Side Bar)
 st.sidebar.header("নতুন ডোনার রেজিস্ট্রেশন")
-with st.sidebar.form("registration_form"):
+with st.sidebar.form(key="registration_form"):
     name = st.text_input("আপনার নাম")
-    # এখানে key='reg_bg' যোগ করা হয়েছে
-    blood_group = st.selectbox("ব্লাড গ্রুপ", ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"], key='reg_bg')
+    blood_group = st.selectbox("ব্লাড গ্রুপ", ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
     phone = st.text_input("ফোন নম্বর")
     location = st.text_input("আপনার এলাকা")
-    submit_button = st.form_submit_button("রেজিস্ট্রেশন সম্পন্ন করুন")
+    submit_button = st.form_submit_button(label="রেজিস্ট্রেশন সম্পন্ন করুন")
 
 if submit_button:
-    st.sidebar.success(f"ধন্যবাদ {name}, আপনার তথ্য নিবন্ধিত হয়েছে!")
+    if name and phone and location:
+        # নতুন ডাটা তৈরি
+        new_data = pd.DataFrame([{"Name": name, "Blood Group": blood_group, "Phone": phone, "Location": location}])
+        # বর্তমান ডাটা আনা
+        existing_data = get_data()
+        # নতুন ডাটা যুক্ত করা
+        updated_df = pd.concat([existing_data, new_data], ignore_index=True)
+        # গুগল শিটে আপডেট করা
+        conn.update(spreadsheet=url, data=updated_df)
+        st.sidebar.success(f"ধন্যবাদ {name}, আপনার তথ্য ডাটাবেসে সেভ হয়েছে!")
+        st.cache_data.clear() # ক্যাশ ক্লিয়ার করা যাতে নতুন ডাটা দেখা যায়
+    else:
+        st.sidebar.error("সবগুলো ঘর পূরণ করুন জানু!")
 
 # সার্চ সেকশন
 st.header("রক্তের সন্ধান করুন")
-# এখানে key='search_bg' যোগ করা হয়েছে
-search_bg = st.selectbox("কোন গ্রুপের রক্ত খুঁজছেন?", ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"], key='search_bg')
+search_bg = st.selectbox("কোন গ্রুপের রক্ত খুঁজছেন?", ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], key='search_bg')
 
-# ডেমো ডোনার লিস্ট
-data = {
-    "নাম": ["রহিম", "করিম", "হরশংকর রায়", "পার্থ"],
-    "ব্লাড গ্রুপ": ["A+", "B+", "O+", "AB+"],
-    "ফোন": ["018XXXXXXXX", "017XXXXXXXX", "019XXXXXXXX", "015XXXXXXXX"],
-    "এলাকা": ["চট্টগ্রাম", "ঢাকা", "কলকাতা", "রাজশাহী"]
-}
-df = pd.DataFrame(data)
-
-# সার্চ রেজাল্ট দেখানো
-result = df[df["ব্লাড গ্রুপ"] == search_bg]
-
-if not result.empty:
-    st.success(f"{search_bg} গ্রুপের ডোনার পাওয়া গেছে:")
-    st.table(result)
-else:
-    st.warning("দুঃখিত, এই গ্রুপে এখন কোনো ডোনার নেই।")
-
-# ক্রেডিট সেকশন (তোমার নাম)
-st.markdown("---")
-st.markdown("<h3 style='text-align: center; color: #e63946;'>👨‍💻 ডেভেলপার: হরশংকর রায়</h3>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-weight: bold;'>'রক্ত দিন, জীবন বাঁচান'</p>", unsafe_allow_html=True)
+if st.button("সার্চ

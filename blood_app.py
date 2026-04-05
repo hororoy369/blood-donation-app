@@ -5,7 +5,7 @@ import pandas as pd
 st.set_page_config(page_title="ব্লাড ডোনেট নেটওয়ার্ক", page_icon="🩸")
 st.title("🩸 ব্লাড ডোনেট নেটওয়ার্ক")
 
-# কানেকশন এখন তোমার সেভ করা Secrets থেকে লিঙ্ক নেবে
+# সরাসরি লিঙ্ক এর বদলে Secrets ব্যবহার করছি
 conn = st.connection("gsheets", type=GSheetsConnection)
 url = st.secrets["connections"]["gsheets"]["spreadsheet"]
 
@@ -13,7 +13,7 @@ url = st.secrets["connections"]["gsheets"]["spreadsheet"]
 def get_data():
     return conn.read(spreadsheet=url, usecols=[0,1,2,3])
 
-# নতুন ডোনার রেজিস্ট্রেশন (Side Bar)
+# নতুন ডোনার রেজিস্ট্রেশন
 st.sidebar.header("নতুন ডোনার রেজিস্ট্রেশন")
 with st.sidebar.form(key="registration_form"):
     name = st.text_input("আপনার নাম")
@@ -31,7 +31,7 @@ if submit_button:
         st.sidebar.success(f"ধন্যবাদ {name}, তথ্য সেভ হয়েছে!")
         st.cache_data.clear()
     else:
-        st.sidebar.error("সবগুলো ঘর পূরণ করুন")
+        st.sidebar.error("সবগুলো ঘর পূরণ করুন জানু!")
 
 # সার্চ সেকশন
 st.header("রক্তের সন্ধান করুন")

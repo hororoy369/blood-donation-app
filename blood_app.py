@@ -15,8 +15,8 @@ url = "https://docs.google.com/spreadsheets/d/1X6O8HFWva-bCEgCGRUG8GmjTGUYzZdfjJ
 def get_data():
     try:
         # আমরা শিট থেকে নাম, গ্রুপ, ফোন ও এলাকা কলামগুলো পড়ব
-        return conn.read(spreadsheet=url, usecols=[0,1,2,3])
-    except:
+        
+    except:return conn.read(spreadsheet=url, worksheet="Form Responses 1", usecols=[0,1,2,3])
         return pd.DataFrame(columns=["Name", "Blood Group", "Phone", "Location"])
 
 # সাইডবারে তোমার দেওয়া গুগল ফর্মের লিঙ্ক
